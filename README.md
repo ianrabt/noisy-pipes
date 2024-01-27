@@ -25,3 +25,8 @@ in order have a convienent toolbox to experiment with error correction.
 - maybe write an extension which acts as a (purposely poor) proxy over two Unix
   sockets, to simulate bidirectional communication -- the command line syntax
   wouldn't be quite as nice as using pipes, however.
+
+## building
+1. (optional) `bear -- make` to generate `compile_commands.json`
+2. install guile and gsl (e.g. `port install guile gsl`)
+3. `make all`
