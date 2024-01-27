@@ -5,31 +5,29 @@
 #include <sys/errno.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
+gsl_rng *r = NULL;
 
 void print_usage(char *program_name)
 {
      fprintf(stderr, "Usage: %s FREQUENCY\n", program_name);
 }
 
-/*
- * Assumes random() has been setup appropriately. `frequency_true' is
- * probability this function returns true.
- */
+/* Assumes random() has been setup appropriately. `frequency_true' is
+   probability this function returns true. */
 bool random_bool(float frequency_true) {
-     /*
-      * POSIX random: returns in the range from 0 to (2**31)−1. Is
-      * uniformly distrubted.
-      *
-      * Actual value of LONG_MAX is platform dependant.
-      */
+     /* POSIX random: returns in the range from 0 to (2**31)−1. Is
+        uniformly distrubted.
+
+        Actual value of LONG_MAX is platform dependant. */
      const long random_max = 2147483647;
 
      return random() < random_max * frequency_true;
 }
 
-/*
- * Assumes random() has been setup appropriately.
- */
+/* Assumes gsl_rng_env_setup() has been setup appropriately. */
 char flip_bits(char c, float frequency) {
      assert(0 <= frequency && frequency <= 1);
 
@@ -39,9 +37,10 @@ char flip_bits(char c, float frequency) {
      if (frequency == 1)
           return ~c;
 
-     int cbit = CHAR_BIT;
-     for(int i = 0; i < CHAR_BIT; i++) {
-          bool flip_bit = random_bool(frequency);
+     for (int i = 0; i < CHAR_BIT; i++) {
+          /*
+           */
+          bool flip_bit = gsl_ran_bernoulli(r, frequency);
           if (flip_bit)
                c ^= (1 << i);
      }
@@ -74,7 +73,15 @@ int main(int argc, char** argv) {
      }
 
      // TODO support passing a seed as an argument.
-     srandomdev();
+     //srandomdev();
+
+     /* create a generator chosen by the
+        environment variable GSL_RNG_TYPE */
+     gsl_rng_env_setup();
+
+     const gsl_rng_type *T = gsl_rng_default;
+     r = gsl_rng_alloc (T);
+
      int c;
      while ((c = getchar()) != EOF) {
           putchar(flip_bits(c, frequency));
